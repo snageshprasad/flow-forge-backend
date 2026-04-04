@@ -31,52 +31,6 @@
 
 ---
 
-## Project Structure
-
-```
-flow-forge-backend/
-├── config/
-│   └── database.js          # Sequelize instance + dynamic model loader
-├── models/
-│   ├── user.model.js
-│   ├── organization.model.js
-│   ├── organization-member.model.js
-│   ├── board.model.js
-│   ├── board-member.model.js
-│   ├── status.model.js
-│   ├── task.model.js
-│   ├── task-assignees.model.js
-│   ├── comment.model.js
-│   ├── activity.model.js
-│   └── invite.model.js
-├── routes/
-├── controllers/
-├── middlewares/
-├── utils/
-├── .env.example
-├── .gitignore
-└── server.js
-```
-
----
-
-## Data Model Overview
-
-```
-Organization
-  ├── OrganizationMember (users + org roles)
-  ├── Invite (token-based email invites)
-  └── Board
-        ├── BoardMember (users + board roles)
-        ├── Status (ordered columns)
-        └── Task
-              ├── TaskAssignee
-              ├── Comment (threaded)
-              └── Activity (audit log)
-```
-
----
-
 ## Getting Started
 
 ### Prerequisites
@@ -87,7 +41,7 @@ Organization
 ### Installation
 
 ```bash
-git clone https://github.com/your-username/flow-forge-backend.git
+git clone https://github.com/snageshprasad/flow-forge-backend.git
 cd flow-forge-backend
 npm install
 ```
@@ -154,8 +108,6 @@ npm start
 | Invites | `/api/invites` |
 | Activity | `/api/activity` |
 
-> Full API documentation coming soon.
-
 ---
 
 ## Roles & Permissions
@@ -171,8 +123,6 @@ npm start
 
 ### Board Roles
 
-Board roles can override org roles for specific boards.
-
 | Role | Description |
 |---|---|
 | `admin` | Manage board, statuses, members |
@@ -181,9 +131,15 @@ Board roles can override org roles for specific boards.
 
 ---
 
+## Frontend
+
+This backend connects to the [FlowForge Frontend](https://github.com/snageshprasad/flow-forge-frontend).
+
+---
+
 ## License
 
-Copyright (c) 2026 Nagesh Prasad. All Rights Reserved.
+Copyright (c) 2025 Nagesh Prasad. All Rights Reserved.
 
 This source code is publicly visible for portfolio and review purposes only.
 Unauthorized use, copying, modification, distribution, or commercial use
