@@ -1,11 +1,25 @@
 module.exports = (sequelize, DataTypes) => {
-  const Status = sequelize.define(
-    "Status",
+  const Task = sequelize.define(
+    "Task",
     {
       id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
+      },
+
+      title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          len: [1, 200],
+          notEmpty: true,
+        },
+      },
+
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: true,
       },
 
       board_id: {
@@ -17,21 +31,19 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
 
-      name: {
-        type: DataTypes.STRING,
+      status_id: {
+        type: DataTypes.UUID,
         allowNull: false,
-        validate: {
-          len: [1, 50],
-          notEmpty: true,
+        references: {
+          model: "statuses",
+          key: "id",
         },
       },
 
-      color: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-          is: /^#[0-9a-fA-F]{6}$/,
-        },
+      priority: {
+        type: DataTypes.ENUM("low", "medium", "high", "urgent"),
+        allowNull: false,
+        defaultValue: "medium",
       },
 
       position: {
@@ -40,39 +52,79 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 0,
       },
 
-      // marks "done" column — used to determine task completion
-      is_terminal: {
-        type: DataTypes.BOOLEAN,
+      due_date: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        validate: {
+          isDate: true,
+          // NOTE: isAfter evaluated per-request here, not at server start
+          isAfterNow(value) {
+            if (value && new Date(value) <= new Date()) {
+              throw new Error("Due date must be in the future.");
+            }
+          },
+        },
+      },
+
+      created_by: {
+        type: DataTypes.UUID,
         allowNull: false,
-        defaultValue: false,
+        references: {
+          model: "users",
+          key: "id",
+        },
       },
     },
     {
-      tableName: "statuses",
+      tableName: "tasks",
       timestamps: true,
+      paranoid: true, // adds deleted_at, soft delete — keeps activity logs intact
       underscored: true,
       indexes: [
         {
           fields: ["board_id"],
         },
         {
-          fields: ["board_id", "position"],
+          fields: ["status_id"],
+        },
+        {
+          fields: ["status_id", "position"],
         },
       ],
     },
   );
 
-  Status.associate = (models) => {
-    Status.belongsTo(models.Board, {
+  Task.associate = (models) => {
+    Task.belongsTo(models.Board, {
       foreignKey: "board_id",
       as: "board",
     });
 
-    Status.hasMany(models.Task, {
+    Task.belongsTo(models.Status, {
       foreignKey: "status_id",
-      as: "tasks",
+      as: "status",
+    });
+
+    Task.belongsTo(models.User, {
+      foreignKey: "created_by",
+      as: "creator",
+    });
+
+    Task.hasMany(models.TaskAssignee, {
+      foreignKey: "task_id",
+      as: "assignees",
+    });
+
+    Task.hasMany(models.Comment, {
+      foreignKey: "task_id",
+      as: "comments",
+    });
+
+    Task.hasMany(models.Activity, {
+      foreignKey: "task_id",
+      as: "activities",
     });
   };
 
-  return Status;
+  return Task;
 };

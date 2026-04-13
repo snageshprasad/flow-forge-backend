@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
-  const Organization = sequelize.define(
-    "Organization",
+  const OrganizationMember = sequelize.define(
+    "OrganizationMember",
     {
       id: {
         type: DataTypes.UUID,
@@ -8,26 +8,16 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
       },
 
-      name: {
-        type: DataTypes.STRING,
+      organization_id: {
+        type: DataTypes.UUID,
         allowNull: false,
-        validate: {
-          len: [2, 100],
-          notEmpty: true,
+        references: {
+          model: "organizations",
+          key: "id",
         },
       },
 
-      address: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-
-      logo_url: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-
-      owner_id: {
+      user_id: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
@@ -35,36 +25,42 @@ module.exports = (sequelize, DataTypes) => {
           key: "id",
         },
       },
+
+      role: {
+        type: DataTypes.ENUM("owner", "admin", "member", "viewer"),
+        allowNull: false,
+        defaultValue: "member",
+      },
+
+      joined_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
     },
     {
-      tableName: "organizations",
+      tableName: "organization_members",
       timestamps: true,
-      paranoid: true, // adds deleted_at, soft delete
       underscored: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ["organization_id", "user_id"],
+        },
+      ],
     },
   );
 
-  Organization.associate = (models) => {
-    Organization.belongsTo(models.User, {
-      foreignKey: "owner_id",
-      as: "owner",
+  OrganizationMember.associate = (models) => {
+    OrganizationMember.belongsTo(models.Organization, {
+      foreignKey: "organization_id",
+      as: "organization",
     });
 
-    Organization.hasMany(models.OrganizationMember, {
-      foreignKey: "organization_id",
-      as: "members",
-    });
-
-    Organization.hasMany(models.Board, {
-      foreignKey: "organization_id",
-      as: "boards",
-    });
-
-    Organization.hasMany(models.Invite, {
-      foreignKey: "organization_id",
-      as: "invites",
+    OrganizationMember.belongsTo(models.User, {
+      foreignKey: "user_id",
+      as: "user",
     });
   };
 
-  return Organization;
+  return OrganizationMember;
 };

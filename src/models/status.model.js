@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
-  const BoardMember = sequelize.define(
-    "BoardMember",
+  const Status = sequelize.define(
+    "Status",
     {
       id: {
         type: DataTypes.UUID,
@@ -17,55 +17,62 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
 
-      user_id: {
-        type: DataTypes.UUID,
+      name: {
+        type: DataTypes.STRING,
         allowNull: false,
-        references: {
-          model: "users",
-          key: "id",
+        validate: {
+          len: [1, 50],
+          notEmpty: true,
         },
       },
 
-      // Board-level role — can override or narrow org-level role
-      // e.g. an org "member" can be a board "admin" for a specific board
-      role: {
-        type: DataTypes.ENUM("admin", "member", "viewer"),
-        allowNull: false,
-        defaultValue: "member",
+      color: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: {
+          is: /^#[0-9a-fA-F]{6}$/,
+        },
       },
 
-      added_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+      position: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+
+      // marks "done" column — used to determine task completion
+      is_terminal: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
     },
     {
-      tableName: "board_members",
+      tableName: "statuses",
       timestamps: true,
       underscored: true,
       indexes: [
         {
-          unique: true,
-          fields: ["board_id", "user_id"], // prevent duplicate board membership
+          fields: ["board_id"],
         },
         {
-          fields: ["user_id"], // fast lookup of all boards a user is on
+          fields: ["board_id", "position"],
         },
       ],
     },
   );
 
-  BoardMember.associate = (models) => {
-    BoardMember.belongsTo(models.Board, {
+  Status.associate = (models) => {
+    Status.belongsTo(models.Board, {
       foreignKey: "board_id",
       as: "board",
     });
 
-    BoardMember.belongsTo(models.User, {
-      foreignKey: "user_id",
-      as: "user",
+    Status.hasMany(models.Task, {
+      foreignKey: "status_id",
+      as: "tasks",
     });
   };
 
-  return BoardMember;
+  return Status;
 };
